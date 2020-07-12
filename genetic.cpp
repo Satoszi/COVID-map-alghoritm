@@ -1,4 +1,8 @@
 #include <iostream>
+#include <fstream>
+#include <sstream>
+#include <vector>
+
 
 using namespace std;
 
@@ -11,7 +15,36 @@ struct Doint{
 
 Doint ** readData(Doint ** park, bool readWay){
 
-    if (readWay == true){
+    fstream file ("in.txt",std::ios::in);
+
+    if (readWay == false){
+        string data;
+        getline(file, data);
+
+        stringstream ss;
+        ss << data;
+
+        string temp;
+        int found;
+        int firstLine[4];
+        int counter = 0;
+        while (!ss.eof()) {
+            ss >> temp;
+            if (stringstream(temp) >> found){
+                firstLine[counter] = found; cout << firstLine[counter] << " ";
+            }
+            temp = "";
+            counter ++;
+        }
+        W = firstLine[0];
+        H = firstLine[1];
+        L = firstLine[2];
+        K = firstLine[3];
+
+        getline(file, data);
+        cout << endl << "name is: " << data << endl;
+    }
+    else{
         cin >> W;
         cin >> H;
         cin >> L;
@@ -21,12 +54,24 @@ Doint ** readData(Doint ** park, bool readWay){
     }
 
 
+
     park = new Doint*[W];
     for (int i = 0; i < W; i ++){
         park[i] = new Doint[H];
     }
 
-    if (readWay == true){
+    if (readWay == false){
+        cout << endl;
+        string data;
+        for(int i = 0; i < H; i++){
+            getline(file, data);
+            cout << data << endl;
+            for (int j = 0; j < W; j++){
+                park[j][i].type = data[j];
+            }
+        }
+    }
+    else{
         for(int i = 0; i < H; i++){
             string data;
             cin >> data;
@@ -82,6 +127,11 @@ int nodes[4];
 int ill;
 int taken;
 int boy;
+};
+
+struct Graph{
+Node * node;
+int result;
 };
 
 Node * fillNode(Node * node, int nodesNumber ){
@@ -210,35 +260,77 @@ Node * unmarkAsIll(Node * node, int positionHere, int positionFrom, int l){
     return node;
 }
 
-void solveGraph(Node * node,int nodesNumber, int boys){
+Graph solveGraph(Graph graph,int nodesNumber, int boys){
     for (int i = 0; i < nodesNumber; i++){
-        if (node[i].ill == -1 && node[i].taken == -1){
+        if (graph.node[i].ill == -1 && graph.node[i].taken == -1){
 
-            node[i].taken = 1;
-            node[i].boy = 1;
+            graph.node[i].taken = 1;
+            graph.node[i].boy = 1;
 
-            int kkk = 4;
+            graph.node = markAsIll(graph.node,i,i,L);
 
-            node = markAsIll(node,i,i,L);
+            return solveGraph(graph, nodesNumber, boys+1);
 
-            solveGraph(node, nodesNumber, boys+1);
-            node[i].boy = 0;
-            node = unmarkAsIll(node,i,i,L);
-            solveGraph(node, nodesNumber, boys);
-            node[i].taken = -1;
-            return;
         }
     }
-    boysCounter++;
-    if (boys == K){
-        for(int i = 0; i < nodesNumber; i++){
-            if (node[i].boy == 1){
-                cout << node[i].x << " " << node[i].y << endl;
+    graph.result = boys;
+    return graph;
+}
 
+Graph createNewMap(Node * dontTouch,int nodesNumber, int x){
+
+    Graph graph;
+    graph.node = new Node[nodesNumber];
+    for (int i = 0; i < nodesNumber; i++){
+        graph.node[i] = dontTouch[i];
+    }
+    int randSize = 4;
+
+
+    for (int i = 0; i < randSize; i++){
+        int counter = 0;
+        while (true){
+            int randChoice = (x*x*i+i+counter)%nodesNumber;
+            if (graph.node[randChoice].ill == -1 && graph.node[randChoice].taken == -1){
+                graph.node[randChoice].taken = 1;
+                graph.node[randChoice].boy = 1;
+                graph.node = markAsIll(graph.node,randChoice,randChoice,L);
+
+                break;
+            }
+           // printGraph3(graph.node, nodesNumber);
+           // cout << randChoice << endl;
+            counter ++;
+        }
+    }
+    //printGraph3(graph.node, nodesNumber);
+    Graph a = solveGraph(graph, nodesNumber, randSize);
+
+    return a;
+
+}
+
+void solveGraph(Node * node,int nodesNumber){
+    int size = 100;
+    std::vector<Graph> array(size);
+    for(int i=0; i<size; ++i){
+        cout << "mapa: " << i << endl;
+        array[i] = createNewMap(node, nodesNumber, i);
+        printGraph3(array[i].node, nodesNumber);
+        cout << "boys: " <<  array[i].result << endl;
+    }
+
+    while (true){
+        for (int i = 0; i < nodesNumber; i++){
+            for (int j = 0; j < nodesNumber; j++){
+                //Graph child = combine(array[i], array[j]);
+                //deleteTheWorst(array);
+                //array.push_back(child);
             }
         }
-        exit(0);
     }
+
+
 }
 
 
@@ -251,21 +343,13 @@ int main()
     boysCounter = 0;
 
     Doint ** park;
-    park = readData(park, true);
+    park = readData(park, false);
     Node * node = fillGraph(park);
     int nodesNumber = countNodes(park);
     //cout << endl;
     //printGraph(node, nodesNumber);
-    solveGraph(node, nodesNumber, 0);
-
-
-
-
-
-
-
-
-
+    //solveGraph(node, nodesNumber, 0);
+    solveGraph(node,nodesNumber);
 
 
 }
