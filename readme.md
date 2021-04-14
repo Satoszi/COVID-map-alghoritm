@@ -1,4 +1,4 @@
-#Algorytm genetyczny rozwiązujący problem izolacji. 
+# Algorytm genetyczny rozwiązujący problem izolacji. 
 
 Problem polega na tym, żę mamy pewną mapę, na której należy rozstawić jak najwięcej osób, tak aby nie zarażały się wzajemnie. 
 
